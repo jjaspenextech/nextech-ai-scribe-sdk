@@ -40,7 +40,7 @@ export class ScribeApiService {
   private getHeaders(doctorGuid: string): HttpHeaders {
     return new HttpHeaders({
       'Content-Type': 'application/json',
-      'X-Provider-Guid': doctorGuid
+      'X-Provider-Guid': doctorGuid // TODO: Will probably move this
     });
   }
 

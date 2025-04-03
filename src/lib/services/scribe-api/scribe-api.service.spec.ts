@@ -1,9 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ScribeApiService } from './scribe-api.service';
-import { environment } from '../../../environments/environment';
 import { schemaList } from '../../models/models';
-import { ClassificationResult } from '../../models/api';
+import { ClassificationResult } from './scribe-api.service';
 
 describe('ScribeApiService', () => {
   let service: ScribeApiService;
@@ -20,7 +19,7 @@ describe('ScribeApiService', () => {
     });
 
     // Override environment.apiUrl for testing
-    Object.defineProperty(environment, 'apiUrl', { get: () => mockApiUrl });
+    // Object.defineProperty(environment, 'apiUrl', { get: () => mockApiUrl });
 
     service = TestBed.inject(ScribeApiService);
     httpMock = TestBed.inject(HttpTestingController);

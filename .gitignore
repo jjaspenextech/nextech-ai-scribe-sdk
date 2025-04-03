@@ -37,3 +37,5 @@ packages/
 node_modules
 dist/
 **/*.tgz
+
+.angular/
