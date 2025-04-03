@@ -1,0 +1,4 @@
+*
+!dist/
+!dist/nextech-ai-scribe-sdk/**/*
+!README.md 

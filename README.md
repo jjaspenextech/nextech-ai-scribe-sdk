@@ -53,31 +53,13 @@ import { ScribeApiService, GenericMappingService } from 'scribe-engine-lib';
 
 @Component({...})
 export class YourComponent {
+  scribeService: ScribeService = inject(ScribeService);
+  private destroy$ = new Subject<void>();
+  isListening$ = this.scribeService.isListening$;
+  recordingDuration$ = this.scribeService.recordingDuration$;
+  public medicalChart$ = (this.scribeService.classificationData$ as Observable<MedicalChart>);
   constructor(
-    private scribeApiService: ScribeApiService,
-    private mappingService: GenericMappingService
   ) {}
-
-  async processTranscription(text: string) {
-    // Initialize conversation
-    const conversationId = await this.scribeApiService.initializeConversation('doctorId');
-    
-    // Get sections present
-    const sections = await this.scribeApiService.getSectionsPresent(
-      text, 'doctorId', conversationId, 1
-    );
-    
-    // Classify conversation
-    const result = await this.scribeApiService.classifyConversation(
-      text, Object.keys(sections.updatedFlags), 'doctorId', conversationId, 1
-    );
-    
-    // Map the classification to your medical chart
-    const medicalChart = this.mappingService.mapAllData(
-      result.classification, initialMedicalChart
-    );
-    
-    return medicalChart;
   }
 }
 ```

@@ -24,8 +24,8 @@ export class ScribeService {
   private destroy$ = new Subject<void>();
   public _isInitialized$ = new BehaviorSubject<boolean>(false);
   public classificationResults$ = new BehaviorSubject<ClassificationResult | null>(null);
-  private _medicalChart = new BehaviorSubject<ClassificationData>(this.initialState);
-  public medicalChart$ = this._medicalChart.asObservable();
+  private _classificationData = new BehaviorSubject<ClassificationData>(this.initialState);
+  public classificationData$ = this._classificationData.asObservable();
   public isListening$ = this.speechToTextService.streamingStatus$.pipe(
     map((status: StreamingStatus) => status === StreamingStatus.Recording)
   );
@@ -96,7 +96,7 @@ export class ScribeService {
     });
 
     // this.mappingService.parseSchemas(this.schemaDefinition);
-    this._medicalChart.next(this.initialState);
+    this._classificationData.next(this.initialState);
   }
 
   async initializeConversation(doctorGuid: string): Promise<void> {
@@ -198,9 +198,9 @@ export class ScribeService {
     if (!result || !result['classification']) return;
     const classification = result['classification'];
     
-    const updatedMedicalChart = this.mappingService.mapAllData(classification, this._medicalChart.value);
+    const updatedMedicalChart = this.mappingService.mapAllData(classification, this._classificationData.value);
     console.log('updatedMedicalChart', updatedMedicalChart);
-    this._medicalChart.next(updatedMedicalChart);
+    this._classificationData.next(updatedMedicalChart);
     this.updateClassifiedSections(classification);
   }
 

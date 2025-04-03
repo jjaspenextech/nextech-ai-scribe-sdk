@@ -1,6 +1,6 @@
 {
-  "name": "scribe-engine-lib",
-  "version": "0.0.2",
+  "name": "nextech-ai-scribe-sdk",
+  "version": "0.0.3",
   "peerDependencies": {
     "@angular/common": "^18.2.0",
     "@angular/core": "^18.2.0",
@@ -9,13 +9,21 @@
   "dependencies": {
     "tslib": "^2.3.0"
   },
+  "devDependencies": {
+    "@angular/compiler": "^18.2.0",
+    "@angular/compiler-cli": "^18.2.0",
+    "ng-packagr": "^18.0.0",
+    "rimraf": "^5.0.5",
+    "typescript": "~5.4.2"
+  },
   "sideEffects": false,
   "scripts": {
-    "build": "ng build scribe-engine-lib",
-    "pack": "npm pack"
+    "clean": "rimraf dist",
+    "build": "npm run clean && ng-packagr -p ng-package.json",
+    "prepare-pack": "copy README.md dist\\nextech-ai-scribe-sdk\\ && node -e \"const pkg = require('./package.json'); const distPkg = { ...pkg, files: ['README.md', 'package.json', 'index.d.ts', 'public-api.d.ts', 'fesm2022/**/*', 'esm2022/**/*', 'lib/**/*'], main: './fesm2022/nextech-ai-scribe-sdk.mjs', module: './fesm2022/nextech-ai-scribe-sdk.mjs', typings: './index.d.ts', exports: { '.': { types: './index.d.ts', esm2022: './esm2022/nextech-ai-scribe-sdk.mjs', default: './fesm2022/nextech-ai-scribe-sdk.mjs' } } }; delete distPkg.devDependencies; delete distPkg.scripts; require('fs').writeFileSync('./dist/nextech-ai-scribe-sdk/package.json', JSON.stringify(distPkg, null, 2));\"",
+    "pack": "npm run prepare-pack && cd dist/nextech-ai-scribe-sdk && npm pack"
   },
   "files": [
-    "dist",
-    "public"
+    "dist/nextech-ai-scribe-sdk/**/*"
   ]
 }

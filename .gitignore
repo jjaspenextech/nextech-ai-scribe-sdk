@@ -34,3 +34,5 @@ packages/
 .cursor/
 .specstory/
 .cursorrules
+node_modules
+dist/
