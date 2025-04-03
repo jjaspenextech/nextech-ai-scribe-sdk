@@ -36,3 +36,4 @@ packages/
 .cursorrules
 node_modules
 dist/
+**/*.tgz

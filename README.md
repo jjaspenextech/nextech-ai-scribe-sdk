@@ -7,8 +7,6 @@ This library provides a set of services and interfaces for interacting with the 
 The Scribe Engine library is designed with the following architecture:
 
 1. **Configuration**: Uses Angular's dependency injection tokens to provide configurable values:
-   - `SCRIBE_API_URL`: URL for the Scribe API
-   - `SCRIBE_API_KEY`: API Key for authentication
    - `SCRIBE_SCHEMA_DEF`: Schema definition for the medical chart
 
 2. **Services**:
@@ -31,25 +29,59 @@ npm install scribe-engine-lib
 
 To use the Scribe Engine in your application:
 
-1. **Provide configuration tokens** in your app module:
+1. **Implement the ScribeAPIClient** in your application:
+Example:
+```typescript
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ScribeAPIClient } from 'nextech-ai-scribe-sdk';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})  
+export class ApiService implements ScribeAPIClient {
+  constructor(private http: HttpClient) {}
+
+  get(url: string, options?: any): Observable<any> {
+    url = environment.apiUrl + url;
+    options.headers = new HttpHeaders({
+      ...options.headers,
+      'api-key': environment.apiKey
+    });
+    return this.http.get(url, options);
+  }
+
+  post(url: string, body: any, options?: any): Observable<any> {
+    url = environment.apiUrl + url;
+    options.headers = new HttpHeaders({
+      ...options.headers,
+      'api-key': environment.apiKey
+    });
+    return this.http.post(url, body, options);
+  }
+}
+```
+
+2. **Provide configuration tokens** in your app module:
 
 ```typescript
-import { SCRIBE_API_URL, SCRIBE_API_KEY, SCRIBE_SCHEMA_DEF } from 'scribe-engine-lib';
+import { SCRIBE_SCHEMA_DEF, SCRIBE_API_CLIENT } from 'nextech-ai-scribe-sdk';
 
 @NgModule({
   providers: [
-    { provide: SCRIBE_API_URL, useValue: 'https://your-api-url.com/api/' },
-    { provide: SCRIBE_API_KEY, useValue: 'your-api-key' },
-    { provide: SCRIBE_SCHEMA_DEF, useValue: yourSchemaDefinition }
+    { provide: SCRIBE_SCHEMA_DEF, useValue: yourSchemaDefinition },
+    { provide: SCRIBE_API_CLIENT, useClass: ApiService }
   ]
 })
 export class AppModule {}
 ```
 
-2. **Use the services** in your components:
+3. **Use the scribe service** in your components:
 
 ```typescript
-import { ScribeApiService, GenericMappingService } from 'scribe-engine-lib';
+import { ScribeService } from 'nextech-ai-scribe-sdk';
 
 @Component({...})
 export class YourComponent {
@@ -60,7 +92,7 @@ export class YourComponent {
   public medicalChart$ = (this.scribeService.classificationData$ as Observable<MedicalChart>);
   constructor(
   ) {}
-  }
+  
 }
 ```
 
@@ -87,6 +119,7 @@ To extend functionality:
 1. **Register custom mappers** in the `GenericMappingService`:
 
 ```typescript
+import { GenericMappingService } from 'nextech-ai-scribe-sdk';
 mappingService.registerMapper({
   canHandle: (node) => node.type === 'custom-type',
   map: (data, node, context) => {

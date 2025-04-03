@@ -28,21 +28,15 @@ export class MicrosoftSpeechSDK {
 export class SpeechToTextService {
   private destroy$ = new Subject<void>();
   private speechRecognizer: any | null = null;
-  private silenceTimeoutMs: number;
   private recognizedSpeechSubject = new Subject<SpeechRecognitionEvent>();
   public recognizedSpeech$ = this.recognizedSpeechSubject
     .asObservable();
   private _streamingStatus$ = new BehaviorSubject<StreamingStatus>(StreamingStatus.NotStarted);
   public streamingStatus$ = this._streamingStatus$.asObservable();
   private speechSDK: MicrosoftSpeechSDK | null = null;
-
-  constructor(
-    @Inject(AZURE_SPEECH_KEY) private azureSpeechKey: string,
-    @Inject(AZURE_SPEECH_REGION) private azureSpeechRegion: string,
-    @Inject(SPEECH_SILENCE_TIMEOUT_MS) silenceTimeoutMs: number
-  ) {
-    this.silenceTimeoutMs = silenceTimeoutMs;
-  }
+  private azureSpeechKey: string = inject(AZURE_SPEECH_KEY);
+  private azureSpeechRegion: string = inject(AZURE_SPEECH_REGION);
+  private silenceTimeoutMs: number = inject(SPEECH_SILENCE_TIMEOUT_MS);
 
   public loadSDK() {
     if (!!(window as any).SpeechSDK) {

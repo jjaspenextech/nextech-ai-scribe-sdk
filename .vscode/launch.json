@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Pack SDK",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "pack",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "pack"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
+  ]
+} 

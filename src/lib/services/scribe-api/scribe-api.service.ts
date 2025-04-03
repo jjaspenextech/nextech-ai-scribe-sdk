@@ -1,7 +1,12 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
-import { SCRIBE_API_URL, SCRIBE_API_KEY, SCRIBE_SCHEMA_DEF } from '../../config/scribe-engine.config';
+import { firstValueFrom, Observable } from 'rxjs';
+import { SCRIBE_SCHEMA_DEF, SCRIBE_API_CLIENT } from '../../config/scribe-engine.config';
+
+export interface ScribeAPIClient {
+  get<T>(url: string, options?: { headers?: HttpHeaders }): Observable<T>;
+  post<T>(url: string, body: any, options?: { headers?: HttpHeaders }): Observable<T>;
+}
 
 // Define API response and request interfaces
 export interface ClassificationResult {
@@ -29,10 +34,8 @@ interface SectionsPresentRequest extends ConversationRequest {
 })
 export class ScribeApiService {
   // Use inject to get configuration values
-  private scribeApiUrl = inject(SCRIBE_API_URL);
-  private apiKey = inject(SCRIBE_API_KEY);
   private schemaList = inject(SCRIBE_SCHEMA_DEF);
-  private httpClient = inject(HttpClient);
+  private httpClient = inject<ScribeAPIClient>(SCRIBE_API_CLIENT);
   
   private getHeaders(doctorGuid: string): HttpHeaders {
     return new HttpHeaders({
@@ -42,7 +45,7 @@ export class ScribeApiService {
   }
 
   async initializeConversation(doctorGuid: string): Promise<string> {
-    const url = `${this.scribeApiUrl}/classification/initialize`;
+    const url = `/classification/initialize`;
     const options = {
       headers: this.getHeaders(doctorGuid)
     };
@@ -56,7 +59,7 @@ export class ScribeApiService {
     conversationGuid: string,
     sequenceNumber: number
   ): Promise<{ updatedFlags: Record<string, boolean> }> {
-    const url = `${this.scribeApiUrl}/section/get_sections_present`;
+    const url = `/section/get_sections_present`;
     const options = {
       headers: this.getHeaders(doctorGuid),
       responseType: 'json' as const
@@ -78,7 +81,7 @@ export class ScribeApiService {
     conversationGuid: string, 
     sequenceNumber: number
   ): Promise<ClassificationResult> {
-    const url = `${this.scribeApiUrl}/classification/classify`;
+    const url = `/classification/classify`;
     const options = {
       headers: this.getHeaders(doctorGuid),
       responseType: 'json' as const
@@ -94,7 +97,7 @@ export class ScribeApiService {
   }
 
   async cleanupConversation(conversationGuid: string, doctorGuid: string): Promise<void> {
-    const url = `${this.scribeApiUrl}/conversation/cleanup`;
+    const url = `/conversation/cleanup`;
     const options = {
       headers: this.getHeaders(doctorGuid)
     };

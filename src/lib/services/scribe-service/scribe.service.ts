@@ -5,7 +5,7 @@ import { ScribeApiService } from '../scribe-api/scribe-api.service';
 import { SpeechToTextService, StreamingStatus } from '../speech-to-text/speechToText.service';
 import { SpeechRecognitionEvent } from '../../models/speech-recognition-event';
 import { GenericMappingService } from '../mapper/mapping.service';
-import { SCRIBE_INITIAL_CHUNKS, SCRIBE_INITIAL_STATE, SCRIBE_SCHEMA_DEF } from '../../config/scribe-engine.config';
+import { SCRIBE_INITIAL_CHUNKS, SCRIBE_INITIAL_STATE, SCRIBE_SCHEMA_DEF, DEFAULT_INITIAL_STATE, DEFAULT_INITIAL_CHUNKS } from '../../config/scribe-engine.config';
 import { ClassificationStrategyManager, CLASSIFICATION_STRATEGY_MANAGER_FACTORY } from '../../strategies/classification-strategy.manager';
 import { ClassificationResult } from '../scribe-api/scribe-api.service';
 import { ClassificationData } from '../../models/models';
@@ -17,8 +17,8 @@ export class ScribeService {
   private mappingService: GenericMappingService = inject(GenericMappingService);
   private scribeApiService: ScribeApiService = inject(ScribeApiService);
   private schemaDefinition = inject(SCRIBE_SCHEMA_DEF);
-  private initialChunks = inject(SCRIBE_INITIAL_CHUNKS);
-  private initialState = inject(SCRIBE_INITIAL_STATE);
+  private initialChunks = inject(SCRIBE_INITIAL_CHUNKS, { optional: true }) ?? DEFAULT_INITIAL_CHUNKS;
+  private initialState = inject(SCRIBE_INITIAL_STATE, { optional: true }) ?? DEFAULT_INITIAL_STATE;
   private strategyManager: ClassificationStrategyManager;
   
   private destroy$ = new Subject<void>();
