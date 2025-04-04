@@ -348,7 +348,7 @@ export const reasonForVisitSchema = {
     }
   }
 
-  export const schemaDict = [
+  export const testSchemaDefinition = [
     reasonForVisitSchema,
     planSchema,
     examSchema

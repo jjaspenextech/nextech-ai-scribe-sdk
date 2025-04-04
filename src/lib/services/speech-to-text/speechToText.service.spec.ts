@@ -2,8 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { MicrosoftSpeechSDK, SpeechToTextService, StreamingStatus } from './speechToText.service';
 import { firstValueFrom } from 'rxjs';
 import { skip, take } from 'rxjs/operators';
+import { SPEECH_SILENCE_TIMEOUT_MS } from '../../config/scribe-engine.config';
+import { ScribeApiService } from '../scribe-api/scribe-api.service';
 
-xdescribe('SpeechToTextService', () => {
+describe('SpeechToTextService', () => {
   let service: SpeechToTextService;
   let mockRecognizer: any;
   let mockSpeechSdk: any;
@@ -15,13 +17,6 @@ xdescribe('SpeechToTextService', () => {
   beforeEach(() => {
     // Spy on console.error
     consoleErrorSpy = spyOn(console, 'error');
-
-    // Mock environment variables
-    const mockEnv = {
-      silenceTimeoutMs: '5000',
-      azureSpeechKey: 'test-key',
-      azureSpeechRegion: 'test-region'
-    };
 
     // Create a mock recognizer with event emitter functionality
     mockRecognizer = {
@@ -48,6 +43,9 @@ xdescribe('SpeechToTextService', () => {
       SpeechConfig: {
         fromSubscription: jasmine.createSpy('fromSubscription').and.returnValue({
           setProperty: jasmine.createSpy('setProperty')
+        }),
+        fromAuthorizationToken: jasmine.createSpy('fromAuthorizationToken').and.returnValue({
+          setProperty: jasmine.createSpy('setProperty')
         })
       },
       AudioConfig: {
@@ -59,16 +57,27 @@ xdescribe('SpeechToTextService', () => {
       SpeechRecognizer: jasmine.createSpy('SpeechRecognizer').and.returnValue(mockRecognizer)
     };
 
+    // Mock API service
+    const mockApiService = {
+      getSttToken: jasmine.createSpy('getSttToken').and.returnValue(Promise.resolve({
+        token: 'test-token',
+        region: 'test-region',
+        error: null
+      }))
+    };
+
     TestBed.configureTestingModule({
       providers: [
         SpeechToTextService,
-        { provide: MicrosoftSpeechSDK, useValue: mockSpeechSdk }
+        { provide: MicrosoftSpeechSDK, useValue: mockSpeechSdk },
+        { provide: SPEECH_SILENCE_TIMEOUT_MS, useValue: 5000 },
+        { provide: ScribeApiService, useValue: mockApiService }
       ]
     });
 
     service = TestBed.inject(SpeechToTextService);
     // Replace the imported SpeechSDK with our mock
-    Object.defineProperty(service, 'SpeechSDK', { value: mockSpeechSdk });
+    Object.defineProperty(service, 'speechSDK', { value: mockSpeechSdk });
   });
 
   it('should be created', () => {
@@ -90,8 +99,8 @@ xdescribe('SpeechToTextService', () => {
       await startPromise;
       
       // Verify SpeechSDK configuration
-      expect(mockSpeechSdk.SpeechConfig.fromSubscription).toHaveBeenCalledWith('test-key', 'test-region');
       expect(mockSpeechSdk.AudioConfig.fromDefaultMicrophoneInput).toHaveBeenCalled();
+      expect(mockSpeechSdk.SpeechConfig.fromAuthorizationToken).toHaveBeenCalledWith('test-token', 'test-region');
       expect(mockSpeechSdk.SpeechRecognizer).toHaveBeenCalled();
       
       // Verify recognizer was started

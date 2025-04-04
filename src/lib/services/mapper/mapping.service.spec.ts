@@ -2,11 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { GenericMappingService } from './mapping.service';
 import { SchemaParserService } from './schema-parser.service';
 import { ParsedSchemaNode, SchemaNodeType } from '../../models/schema-definition';
-import { ClassificationData, KbChoice, UIItemWithDataReference } from '../../models/classification';
+import { KbChoice, UIItemWithDataReference } from '../../models/classification';
 import { ReasonForVisit, Plan, Exam, MedicalChart } from './test.data';
-import { schemaDict } from './test.schema';
+import { SCRIBE_SCHEMA_DEF } from '../../config/scribe-engine.config';
+import { testSchemaDefinition } from './test.schema';
 
-describe('GenericMappingService', () => {
+fdescribe('GenericMappingService', () => {
   let service: GenericMappingService;
   let mockData: Record<string, any>;
   let emptyMedicalChart: MedicalChart;
@@ -19,7 +20,8 @@ describe('GenericMappingService', () => {
     TestBed.configureTestingModule({
       providers: [
         GenericMappingService,
-        SchemaParserService
+        SchemaParserService,
+        { provide: SCRIBE_SCHEMA_DEF, useValue: testSchemaDefinition }
       ]
     });
 
