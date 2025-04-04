@@ -9,159 +9,49 @@ import {
   getSchemaWithUnknownType 
 } from './schema-parser-test.data';
 
-// Create mock parsed schemas that match what we expect the service to generate
-const createMockParsedSchemas = () => {
-  // Create the parsed schema structure for TestSchema
-  const testSchema: ParsedSchema = {
-    rootType: 'TestSchema',
-    structure: {
-      type: SchemaNodeType.Object,
-      description: 'Test schema root object',
-      properties: {
-        stringProp: {
-          type: SchemaNodeType.String,
-          description: 'String property'
-        },
-        numberProp: {
-          type: SchemaNodeType.Number,
-          validations: [
-            { type: 'minimum', value: 0 },
-            { type: 'maximum', value: 100 }
-          ]
-        },
-        booleanProp: {
-          type: SchemaNodeType.Boolean
-        },
-        arrayProp: {
-          type: SchemaNodeType.Array,
-          itemType: {
-            type: SchemaNodeType.String
-          }
-        },
-        objectProp: {
-          type: SchemaNodeType.Object,
-          properties: {
-            nestedProp: {
-              type: SchemaNodeType.String
-            }
-          },
-          required: ['nestedProp']
-        },
-        enumProp: {
-          type: SchemaNodeType.String,
-          enumValues: ['value1', 'value2', 'value3']
-        },
-        kbEntityProp: {
-          type: SchemaNodeType.KbEntity,
-          kbTableId: 123
-        }
-      }
-    }
-  };
-
-  // Create the parsed schema structure for AnotherSchema
-  const anotherSchema: ParsedSchema = {
-    rootType: 'AnotherSchema',
-    structure: {
-      type: SchemaNodeType.Object,
-      properties: {
-        simpleProp: {
-          type: SchemaNodeType.String
-        }
-      }
-    }
-  };
-
-  // Create the parsed schema structure for NoType schema
-  const noTypeSchema: ParsedSchema = {
-    rootType: 'NoType',
-    structure: {
-      type: SchemaNodeType.Object,
-      properties: {}
-    }
-  };
-
-  // Create the parsed schema structure for UnknownType schema
-  const unknownTypeSchema: ParsedSchema = {
-    rootType: 'UnknownType',
-    structure: {
-      type: SchemaNodeType.Object,
-      properties: {}
-    }
-  };
-
-  return {
-    testSchema,
-    anotherSchema,
-    noTypeSchema,
-    unknownTypeSchema
-  };
-};
-
 describe('SchemaParserService', () => {
   let service: SchemaParserService;
   let testSchemas: Record<string, any>;
-  let mockParsedSchemas: ReturnType<typeof createMockParsedSchemas>;
 
   beforeEach(() => {
+    // Get test schemas from test data file
+    testSchemas = getTestSchemas();
+
     TestBed.configureTestingModule({
       providers: [
         SchemaParserService,
         { provide: SCRIBE_SCHEMA_DEF, useValue: [] }
       ]
     });
-
-    // Get mock schemas
-    mockParsedSchemas = createMockParsedSchemas();
     
     // Inject the service
     service = TestBed.inject(SchemaParserService);
-    
-    // Get test schemas from test data file
-    testSchemas = getTestSchemas();
-    
-    // Spy on parseSchema to return our mock data
-    spyOn(service, 'parseSchema').and.callFake((schemaType: string, schemaData: any) => {
-      if (schemaType === 'TestSchema') {
-        return mockParsedSchemas.testSchema;
-      } else if (schemaType === 'AnotherSchema') {
-        return mockParsedSchemas.anotherSchema;
-      } else if (schemaType === 'NoType') {
-        return mockParsedSchemas.noTypeSchema;
-      } else if (schemaType === 'UnknownType') {
-        return mockParsedSchemas.unknownTypeSchema;
-      }
-      
-      // Default fallback
-      return {
-        rootType: schemaType,
-        structure: {
-          type: SchemaNodeType.Object,
-          properties: {}
-        }
-      };
-    });
-    
-    // Set up private parsedSchemas map for testing
-    // This populates the map with our mock data
-    (service as any).parsedSchemas = new Map<string, ParsedSchema>();
-    (service as any).parsedSchemas.set('TestSchema', mockParsedSchemas.testSchema);
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
+  describe('constructor', () => {
+    it('should parse schemas provided in the constructor', () => {
+      // Create a new service with schemas in the constructor
+      const localService = new SchemaParserService([testSchemas]);
+      
+      // Check that schemas were parsed and stored
+      const parsedSchema = localService.getParsedSchema('TestSchema');
+      expect(parsedSchema).toBeDefined();
+      expect(parsedSchema?.rootType).toBe('TestSchema');
+    });
+  });
+
   describe('parseSchemas', () => {
     it('should parse multiple schemas', () => {
+      // Parse test schemas
+      service.parseSchemas(testSchemas['TestSchema']);
+      
+      // Parse additional schemas
       const additionalSchema = getAdditionalSchema();
-      const combinedSchemas = { ...testSchemas, ...additionalSchema };
-      
-      // Original spy on parseSchema will intercept this
-      service.parseSchemas(combinedSchemas);
-      
-      // Set up the mock data for testing retrieval
-      (service as any).parsedSchemas.set('AnotherSchema', mockParsedSchemas.anotherSchema);
+      service.parseSchemas(additionalSchema['AnotherSchema']);
       
       // Test getParsedSchema method
       const parsedSchema1 = service.getParsedSchema('TestSchema');
@@ -177,7 +67,6 @@ describe('SchemaParserService', () => {
   describe('parseSchema', () => {
     it('should correctly parse a schema', () => {
       const schemaData = testSchemas['TestSchema']['TestSchema'];
-      // Original spy on parseSchema will intercept this
       const result = service.parseSchema('TestSchema', schemaData);
       
       expect(result.rootType).toBe('TestSchema');
@@ -185,30 +74,47 @@ describe('SchemaParserService', () => {
       expect(result.structure.description).toBe('Test schema root object');
       expect(result.structure.properties).toBeDefined();
       expect(Object.keys(result.structure.properties!).length).toBe(7);
+      expect(result.structure.required).toContain('stringProp');
+      expect(result.structure.required).toContain('numberProp');
     });
   });
 
-  describe('node parsing', () => {
+  describe('parseNode', () => {
+    it('should handle null or undefined nodes', () => {
+      // Call the private method via any typecasting
+      const result = (service as any).parseNode(null);
+      expect(result.type).toBe(SchemaNodeType.Object);
+    });
+
     it('should correctly parse string properties', () => {
-      const parsedSchema = service.getParsedSchema('TestSchema');
+      const stringNode = {
+        type: 'string',
+        description: 'String property'
+      };
       
-      const stringProp = parsedSchema?.structure.properties?.['stringProp'];
-      expect(stringProp).toBeDefined();
-      expect(stringProp?.type).toBe(SchemaNodeType.String);
-      expect(stringProp?.description).toBe('String property');
+      const result = (service as any).parseNode(stringNode);
+      
+      expect(result.type).toBe(SchemaNodeType.String);
+      expect(result.description).toBe('String property');
     });
 
     it('should correctly parse number properties with validations', () => {
-      const parsedSchema = service.getParsedSchema('TestSchema');
+      const numberNode = {
+        type: 'number',
+        description: 'Number property',
+        minimum: 0,
+        maximum: 100
+      };
       
-      const numberProp = parsedSchema?.structure.properties?.['numberProp'];
-      expect(numberProp).toBeDefined();
-      expect(numberProp?.type).toBe(SchemaNodeType.Number);
-      expect(numberProp?.validations).toBeDefined();
-      expect(numberProp?.validations?.length).toBe(2);
+      const result = (service as any).parseNode(numberNode);
       
-      const minValidation = numberProp?.validations?.find(v => v.type === 'minimum');
-      const maxValidation = numberProp?.validations?.find(v => v.type === 'maximum');
+      expect(result.type).toBe(SchemaNodeType.Number);
+      expect(result.description).toBe('Number property');
+      expect(result.validations).toBeDefined();
+      expect(result.validations.length).toBe(2);
+      
+      const minValidation = result.validations.find(v => v.type === 'minimum');
+      const maxValidation = result.validations.find(v => v.type === 'maximum');
       
       expect(minValidation).toBeDefined();
       expect(minValidation?.value).toBe(0);
@@ -217,84 +123,161 @@ describe('SchemaParserService', () => {
     });
 
     it('should correctly parse boolean properties', () => {
-      const parsedSchema = service.getParsedSchema('TestSchema');
+      const booleanNode = {
+        type: 'boolean',
+        description: 'Boolean property'
+      };
       
-      const booleanProp = parsedSchema?.structure.properties?.['booleanProp'];
-      expect(booleanProp).toBeDefined();
-      expect(booleanProp?.type).toBe(SchemaNodeType.Boolean);
+      const result = (service as any).parseNode(booleanNode);
+      
+      expect(result.type).toBe(SchemaNodeType.Boolean);
+      expect(result.description).toBe('Boolean property');
     });
 
     it('should correctly parse array properties', () => {
-      const parsedSchema = service.getParsedSchema('TestSchema');
+      const arrayNode = {
+        type: 'array',
+        description: 'Array property',
+        items: {
+          type: 'string',
+          description: 'Array item'
+        }
+      };
       
-      const arrayProp = parsedSchema?.structure.properties?.['arrayProp'];
-      expect(arrayProp).toBeDefined();
-      expect(arrayProp?.type).toBe(SchemaNodeType.Array);
-      expect(arrayProp?.itemType).toBeDefined();
-      expect(arrayProp?.itemType?.type).toBe(SchemaNodeType.String);
+      const result = (service as any).parseNode(arrayNode);
+      
+      expect(result.type).toBe(SchemaNodeType.Array);
+      expect(result.description).toBe('Array property');
+      expect(result.itemType).toBeDefined();
+      expect(result.itemType?.type).toBe(SchemaNodeType.String);
+      expect(result.itemType?.description).toBe('Array item');
     });
 
     it('should correctly parse object properties with nested properties', () => {
-      const parsedSchema = service.getParsedSchema('TestSchema');
+      const objectNode = {
+        type: 'object',
+        description: 'Object property',
+        properties: {
+          nestedProp: {
+            type: 'string',
+            description: 'Nested property'
+          }
+        },
+        required: ['nestedProp']
+      };
       
-      const objectProp = parsedSchema?.structure.properties?.['objectProp'];
-      expect(objectProp).toBeDefined();
-      expect(objectProp?.type).toBe(SchemaNodeType.Object);
-      expect(objectProp?.properties).toBeDefined();
-      expect(objectProp?.properties?.['nestedProp']).toBeDefined();
-      expect(objectProp?.required).toContain('nestedProp');
+      const result = (service as any).parseNode(objectNode);
+      
+      expect(result.type).toBe(SchemaNodeType.Object);
+      expect(result.description).toBe('Object property');
+      expect(result.properties).toBeDefined();
+      expect(result.properties?.['nestedProp']).toBeDefined();
+      expect(result.properties?.['nestedProp']?.type).toBe(SchemaNodeType.String);
+      expect(result.required).toContain('nestedProp');
     });
 
     it('should correctly parse enum properties', () => {
-      const parsedSchema = service.getParsedSchema('TestSchema');
+      const enumNode = {
+        type: 'string',
+        description: 'Enum property',
+        enum: ['value1', 'value2', 'value3']
+      };
       
-      const enumProp = parsedSchema?.structure.properties?.['enumProp'];
-      expect(enumProp).toBeDefined();
-      expect(enumProp?.type).toBe(SchemaNodeType.String);
-      expect(enumProp?.enumValues).toBeDefined();
-      expect(enumProp?.enumValues?.length).toBe(3);
-      expect(enumProp?.enumValues).toContain('value1');
-      expect(enumProp?.enumValues).toContain('value2');
-      expect(enumProp?.enumValues).toContain('value3');
+      const result = (service as any).parseNode(enumNode);
+      
+      expect(result.type).toBe(SchemaNodeType.String);
+      expect(result.description).toBe('Enum property');
+      expect(result.enumValues).toBeDefined();
+      expect(result.enumValues?.length).toBe(3);
+      expect(result.enumValues).toContain('value1');
+      expect(result.enumValues).toContain('value2');
+      expect(result.enumValues).toContain('value3');
     });
 
     it('should correctly parse KB entity properties', () => {
-      const parsedSchema = service.getParsedSchema('TestSchema');
+      const kbEntityNode = {
+        type: 'object',
+        description: 'KB Entity property',
+        kbTableId: 123
+      };
       
-      const kbEntityProp = parsedSchema?.structure.properties?.['kbEntityProp'];
-      expect(kbEntityProp).toBeDefined();
-      expect(kbEntityProp?.type).toBe(SchemaNodeType.KbEntity);
-      expect(kbEntityProp?.kbTableId).toBe(123);
+      const result = (service as any).parseNode(kbEntityNode);
+      
+      expect(result.type).toBe(SchemaNodeType.KbEntity);
+      expect(result.description).toBe('KB Entity property');
+      expect(result.kbTableId).toBe(123);
+    });
+  });
+
+  describe('determineNodeType', () => {
+    it('should return Object type for null or undefined nodes', () => {
+      const result = (service as any).determineNodeType(null);
+      expect(result).toBe(SchemaNodeType.Object);
+    });
+
+    it('should return Object type for nodes without type', () => {
+      const result = (service as any).determineNodeType({});
+      expect(result).toBe(SchemaNodeType.Object);
+    });
+
+    it('should return correct type for each possible type', () => {
+      expect((service as any).determineNodeType({ type: 'object' })).toBe(SchemaNodeType.Object);
+      expect((service as any).determineNodeType({ type: 'array' })).toBe(SchemaNodeType.Array);
+      expect((service as any).determineNodeType({ type: 'string' })).toBe(SchemaNodeType.String);
+      expect((service as any).determineNodeType({ type: 'number' })).toBe(SchemaNodeType.Number);
+      expect((service as any).determineNodeType({ type: 'boolean' })).toBe(SchemaNodeType.Boolean);
+    });
+
+    it('should return Object type for unknown types', () => {
+      const result = (service as any).determineNodeType({ type: 'unknown' });
+      expect(result).toBe(SchemaNodeType.Object);
+    });
+  });
+
+  describe('parseValidations', () => {
+    it('should return empty array for null or undefined nodes', () => {
+      const result = (service as any).parseValidations(null);
+      expect(result).toEqual([]);
+    });
+
+    it('should parse minimum and maximum validations', () => {
+      const node = { 
+        minimum: 0,
+        maximum: 100
+      };
+      
+      const result = (service as any).parseValidations(node);
+      
+      expect(result.length).toBe(2);
+      expect(result[0]).toEqual({ type: 'minimum', value: 0 });
+      expect(result[1]).toEqual({ type: 'maximum', value: 100 });
+    });
+
+    it('should handle nodes without validations', () => {
+      const result = (service as any).parseValidations({});
+      expect(result).toEqual([]);
     });
   });
 
   describe('edge cases', () => {
     it('should handle schemas without type', () => {
       const schemaWithoutType = getSchemaWithoutType();
+      const schemaData = schemaWithoutType['NoType']['NoType'];
       
-      // Original spy on parseSchema will intercept this
-      service.parseSchemas(schemaWithoutType);
+      const result = service.parseSchema('NoType', schemaData);
       
-      // Set up the mock data for testing
-      (service as any).parsedSchemas.set('NoType', mockParsedSchemas.noTypeSchema);
-      
-      const parsedSchema = service.getParsedSchema('NoType');
-      expect(parsedSchema).toBeDefined();
-      expect(parsedSchema?.structure.type).toBe(SchemaNodeType.Object);
+      expect(result.rootType).toBe('NoType');
+      expect(result.structure.type).toBe(SchemaNodeType.Object);
     });
 
     it('should handle unknown types as object', () => {
       const schemaWithUnknownType = getSchemaWithUnknownType();
+      const schemaData = schemaWithUnknownType['UnknownType']['UnknownType'];
       
-      // Original spy on parseSchema will intercept this
-      service.parseSchemas(schemaWithUnknownType);
+      const result = service.parseSchema('UnknownType', schemaData);
       
-      // Set up the mock data for testing
-      (service as any).parsedSchemas.set('UnknownType', mockParsedSchemas.unknownTypeSchema);
-      
-      const parsedSchema = service.getParsedSchema('UnknownType');
-      expect(parsedSchema).toBeDefined();
-      expect(parsedSchema?.structure.type).toBe(SchemaNodeType.Object);
+      expect(result.rootType).toBe('UnknownType');
+      expect(result.structure.type).toBe(SchemaNodeType.Object);
     });
   });
 }); 
