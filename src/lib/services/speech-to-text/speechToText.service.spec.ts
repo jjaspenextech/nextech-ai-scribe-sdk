@@ -10,13 +10,19 @@ describe('SpeechToTextService', () => {
   let mockRecognizer: any;
   let mockSpeechSdk: any;
   let consoleErrorSpy: jasmine.Spy;
+  let consoleLogSpy: jasmine.Spy;
+  let originalSpeechSDK: any;
 
   // Increase timeout for async tests
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
   beforeEach(() => {
-    // Spy on console.error
+    // Spy on console.error and console.log
     consoleErrorSpy = spyOn(console, 'error');
+    consoleLogSpy = spyOn(console, 'log');
+
+    // Store original window.SpeechSDK if it exists
+    originalSpeechSDK = (window as any).SpeechSDK;
 
     // Create a mock recognizer with event emitter functionality
     mockRecognizer = {
@@ -76,8 +82,15 @@ describe('SpeechToTextService', () => {
     });
 
     service = TestBed.inject(SpeechToTextService);
-    // Replace the imported SpeechSDK with our mock
-    Object.defineProperty(service, 'speechSDK', { value: mockSpeechSdk });
+  });
+
+  afterEach(() => {
+    // Restore the original SpeechSDK property
+    if (originalSpeechSDK) {
+      (window as any).SpeechSDK = originalSpeechSDK;
+    } else {
+      delete (window as any).SpeechSDK;
+    }
   });
 
   it('should be created', () => {
@@ -91,7 +104,38 @@ describe('SpeechToTextService', () => {
     });
   });
 
+  describe('loadSDK', () => {
+    it('should set speechSDK when SpeechSDK is available on window', () => {
+      // Mock the window.SpeechSDK
+      (window as any).SpeechSDK = mockSpeechSdk;
+      
+      // Call loadSDK
+      service.loadSDK();
+      
+      // Verify log message was shown
+      expect(consoleLogSpy).toHaveBeenCalledWith('Speech SDK loaded');
+    });
+    
+    it('should log error when SpeechSDK is not available on window', () => {
+      // Ensure window.SpeechSDK is undefined
+      delete (window as any).SpeechSDK;
+      
+      // Call loadSDK
+      service.loadSDK();
+      
+      // Verify error was logged
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Speech SDK not loaded');
+    });
+  });
+
   describe('startSpeechRecognizer', () => {
+    beforeEach(() => {
+      // Mock the window.SpeechSDK
+      (window as any).SpeechSDK = mockSpeechSdk;
+      // Load the SDK
+      service.loadSDK();
+    });
+
     it('should create recognizer and start recognition', async () => {
       const startPromise = service.startSpeechRecognizer();
       
@@ -236,6 +280,11 @@ describe('SpeechToTextService', () => {
 
   describe('stopSpeechRecognizer', () => {
     beforeEach(async () => {
+      // Mock the window.SpeechSDK
+      (window as any).SpeechSDK = mockSpeechSdk;
+      // Load the SDK
+      service.loadSDK();
+      
       // Start the recognizer before each test
       await service.startSpeechRecognizer();
       // Ensure the speechRecognizer is set
