@@ -1,8 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ScribeApiService } from './scribe-api.service';
-import { schemaList } from '../../models/models';
-import { ClassificationResult } from './scribe-api.service';
+import { ClassificationResult } from '../../models/api';
 
 describe('ScribeApiService', () => {
   let service: ScribeApiService;
@@ -37,7 +36,7 @@ describe('ScribeApiService', () => {
     it('should make a GET request to initialize conversation and return conversationGuid', async () => {
       const expectedResponse = { conversationGuid: mockConversationGuid };
       
-      const promise = service.initializeConversation(mockDoctorGuid);
+      const promise = service.initializeConversation();
       
       const req = httpMock.expectOne(`${mockApiUrl}/conversation/initialize`);
       expect(req.request.method).toBe('GET');
@@ -58,8 +57,7 @@ describe('ScribeApiService', () => {
       
       const promise = service.getSectionsPresent(
         transcription, 
-        mockDoctorGuid, 
-        mockConversationGuid, 
+          mockConversationGuid, 
         sequenceNumber
       );
       
@@ -68,10 +66,10 @@ describe('ScribeApiService', () => {
       expect(req.request.headers.get('X-Provider-Guid')).toBe(mockDoctorGuid);
       expect(req.request.body).toEqual({
         conversation_id: mockConversationGuid,
-        output_schema: schemaList,
+        output_schema: [],
         sequence_number: sequenceNumber,
         prompt_text: transcription,
-        sections: schemaList
+        sections: []
       });
       req.flush(expectedResponse);
       
@@ -99,7 +97,6 @@ describe('ScribeApiService', () => {
       const promise = service.classifyConversation(
         transcription, 
         sections, 
-        mockDoctorGuid, 
         mockConversationGuid, 
         sequenceNumber
       );
@@ -109,7 +106,7 @@ describe('ScribeApiService', () => {
       expect(req.request.headers.get('X-Provider-Guid')).toBe(mockDoctorGuid);
       expect(req.request.body).toEqual({
         conversation_id: mockConversationGuid,
-        output_schema: schemaList,
+        output_schema: [],
         sequence_number: sequenceNumber,
         prompt_text: transcription,
         sections: sections
@@ -123,7 +120,7 @@ describe('ScribeApiService', () => {
 
   describe('cleanupConversation', () => {
     it('should make a POST request to cleanup conversation', async () => {
-      const promise = service.cleanupConversation(mockConversationGuid, mockDoctorGuid);
+      const promise = service.cleanupConversation(mockConversationGuid);
       
       const req = httpMock.expectOne(`${mockApiUrl}/conversation/cleanup`);
       expect(req.request.method).toBe('POST');
@@ -141,7 +138,7 @@ describe('ScribeApiService', () => {
     it('should propagate errors from the API', async () => {
       const errorResponse = { status: 500, statusText: 'Server Error' };
       
-      const promise = service.initializeConversation(mockDoctorGuid);
+      const promise = service.initializeConversation();
       
       const req = httpMock.expectOne(`${mockApiUrl}/conversation/initialize`);
       req.flush('Error', errorResponse);

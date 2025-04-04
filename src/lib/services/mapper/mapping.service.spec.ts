@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { GenericMappingService } from './mapping.service';
 import { SchemaParserService } from './schema-parser.service';
 import { ParsedSchemaNode, SchemaNodeType } from '../../models/schema-definition';
-import { ClassificationData, KbChoice, UIItemWithDataReference } from '../../models/models';
+import { ClassificationData, KbChoice, UIItemWithDataReference } from '../../models/classification';
 import { ReasonForVisit, Plan, Exam, MedicalChart } from './test.data';
 import { schemaDict } from './test.schema';
 

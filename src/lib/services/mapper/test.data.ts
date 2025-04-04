@@ -1,4 +1,4 @@
-import { ClassificationData, DataReference } from "../../models/models";
+import { ClassificationData, DataReference } from "../../models/classification";
 
 export interface ReasonForVisit {
   historyOfPresentIllness: HistoryOfPresentIllness;

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { SchemaParserService } from './schema-parser.service';
-import { ParsedSchemaNode, SchemaNodeType } from '../../models/schema-definition';
+  import { SchemaParserService } from './schema-parser.service';
+import { SchemaNodeType } from '../../models/schema-definition';
 
 describe('SchemaParserService', () => {
   let service: SchemaParserService;

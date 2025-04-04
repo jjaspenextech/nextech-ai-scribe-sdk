@@ -11,7 +11,7 @@ export { GenericMappingService };
 export * from './lib/services/scribe-service/scribe.service';
 
 // Export models
-export * from './lib/models/models';
+export * from './lib/models/classification';
 export * from './lib/models/schema-definition';
 export * from './lib/models/speech-recognition-event';
 

@@ -7,9 +7,9 @@ import { SpeechRecognitionEvent } from '../../models/speech-recognition-event';
 import { GenericMappingService } from '../mapper/mapping.service';
 import { SCRIBE_INITIAL_CHUNKS, SCRIBE_INITIAL_STATE, SCRIBE_SCHEMA_DEF, DEFAULT_INITIAL_STATE, DEFAULT_INITIAL_CHUNKS } from '../../config/scribe-engine.config';
 import { ClassificationStrategyManager, CLASSIFICATION_STRATEGY_MANAGER_FACTORY } from '../../strategies/classification-strategy.manager';
-import { ClassificationResult } from '../scribe-api/scribe-api.service';
-import { ClassificationData } from '../../models/models';
-@Injectable({
+import { ClassificationResult } from '../../models/api';
+import { ClassificationData } from '../../models/classification';
+@Injectable({ 
   providedIn: 'root'
 })
 export class ScribeService {
@@ -32,7 +32,6 @@ export class ScribeService {
   private timerStop$ = new Subject<void>();
   private recordingStartTime: number | null = null;
   public recordingDuration$ = new BehaviorSubject<string>('00:00');
-  public doctorGuid: string = "";
   private conversationGuid: string = "";
   private $recognizedSpeechSubject = this.speechToTextService.recognizedSpeech$;
   private schemaNames = this.schemaDefinition.map(schema => Object.keys(schema)[0]);
@@ -99,11 +98,10 @@ export class ScribeService {
     this._classificationData.next(this.initialState);
   }
 
-  async initializeConversation(doctorGuid: string): Promise<void> {
+  async initializeConversation(): Promise<void> {
     try {
-      this.doctorGuid = doctorGuid;
       this.speechToTextService.loadSDK();
-      this.conversationGuid = await this.scribeApiService.initializeConversation(doctorGuid);
+      this.conversationGuid = await this.scribeApiService.initializeConversation();
       this._isInitialized$.next(true);
       // for quick testing, do not commit this uncommented
       for (const chunk of this.initialChunks) {
@@ -146,7 +144,6 @@ export class ScribeService {
       const result = await this.scribeApiService.classifyConversation(
         fullConversation, 
         sectionsToClassify, 
-        this.doctorGuid,
         this.conversationGuid,
         sequenceNumber
       );
@@ -163,7 +160,6 @@ export class ScribeService {
     try {
       const sections = await this.scribeApiService.getSectionsPresent(
         chunk, 
-        this.doctorGuid, 
         this.conversationGuid,
         sequenceNumber
       );
@@ -235,7 +231,7 @@ export class ScribeService {
   async cleanupConversation(conversationGuid: string): Promise<void> {
     try {
       this.strategyManager.cleanup();
-      await this.scribeApiService.cleanupConversation(conversationGuid, this.doctorGuid);
+      await this.scribeApiService.cleanupConversation(conversationGuid);
       this._isInitialized$.next(false);
     } catch (error) {
       console.error('Error cleaning up conversation:', error);

@@ -1,5 +1,5 @@
 import { Injectable, inject } from "@angular/core";
-import { ClassificationData, UIItemWithDataReference, KbChoice } from "../../models/models";
+import { ClassificationData, UIItemWithDataReference, KbChoice } from "../../models/classification";
 import { ParsedSchemaNode, SchemaNodeType } from "../../models/schema-definition";
 import { SchemaParserService } from "./schema-parser.service";
 

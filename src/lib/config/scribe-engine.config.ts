@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { ScribeSchemaDefinition } from '../models/schema-definition';
-import { ClassificationData } from '../models/models';
+import { ClassificationData } from '../models/classification';
 import { ScribeAPIClient } from '../services/scribe-api/scribe-api.service';
 /**
  * Configuration interface for the Scribe Engine
@@ -31,7 +31,5 @@ export const SCRIBE_INITIAL_STATE = new InjectionToken<ClassificationData>('SCRI
 export const SCRIBE_INITIAL_CHUNKS = new InjectionToken<string[]>('SCRIBE_INITIAL_CHUNKS', {
   factory: () => DEFAULT_INITIAL_CHUNKS
 });
-export const AZURE_SPEECH_KEY = new InjectionToken<string>('AZURE_SPEECH_KEY');
-export const AZURE_SPEECH_REGION = new InjectionToken<string>('AZURE_SPEECH_REGION');
 export const SPEECH_SILENCE_TIMEOUT_MS = new InjectionToken<number>('SPEECH_SILENCE_TIMEOUT_MS');
 export const SCRIBE_API_CLIENT = new InjectionToken<ScribeAPIClient>('SCRIBE_API_CLIENT');

@@ -4,7 +4,7 @@ import { ScribeService } from './scribe.service';
 import { ScribeApiService } from '../scribe-api/scribe-api.service';
 import { SpeechToTextService, StreamingStatus } from '../speech-to-text/speechToText.service';
 import { GenericMappingService } from '../mapper/mapping.service';
-import { ClassificationResult } from '../scribe-api/scribe-api.service';
+import { ClassificationResult } from '../../models/api';
 import { CLASSIFICATION_STRATEGY_MANAGER_FACTORY } from '../../strategies/classification-strategy.manager';
 // Mock classes for dependencies
 class MockSpeechToTextService {
@@ -80,10 +80,9 @@ describe('ScribeService', () => {
     it('should initialize conversation with doctor GUID', async () => {
       const doctorGuid = 'test-doctor-guid';
       
-      await service.initializeConversation(doctorGuid);
+      await service.initializeConversation();
       
-      expect(mockScribeApiService.initializeConversation).toHaveBeenCalledWith(doctorGuid);
-      expect(service['doctorGuid']).toBe(doctorGuid);
+      expect(mockScribeApiService.initializeConversation).toHaveBeenCalled();
       expect(service['conversationGuid']).toBe('mock-conversation-guid');
       expect(service['_isInitialized$'].value).toBe(true);
     });
@@ -96,7 +95,7 @@ describe('ScribeService', () => {
       
       spyOn(console, 'error');
       
-      await expectAsync(service.initializeConversation(doctorGuid)).toBeRejected();
+      await expectAsync(service.initializeConversation()).toBeRejected();
       expect(console.error).toHaveBeenCalled();
       expect(service['_isInitialized$'].value).toBe(false);
     });
@@ -185,7 +184,7 @@ describe('ScribeService', () => {
   describe('processChunk', () => {
     beforeEach(async () => {
       // Initialize the service
-      await service.initializeConversation('test-doctor-guid');
+      await service.initializeConversation();
     });
     
     it('should process a chunk and update medical chart', async () => {
@@ -264,7 +263,7 @@ describe('ScribeService', () => {
 
   describe('classifyChunk', () => {
     beforeEach(async () => {
-      await service.initializeConversation('test-doctor-guid');
+      await service.initializeConversation();
     });
 
     it('should classify with provided sections', async () => {

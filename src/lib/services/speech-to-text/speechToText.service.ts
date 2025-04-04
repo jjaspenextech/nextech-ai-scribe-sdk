@@ -1,7 +1,8 @@
-import { Injectable, Inject, inject } from '@angular/core';
-import { async, BehaviorSubject, Subject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { SpeechRecognitionEvent } from '../../models/speech-recognition-event';
-import { AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, SPEECH_SILENCE_TIMEOUT_MS } from '../../config/scribe-engine.config';
+import { SPEECH_SILENCE_TIMEOUT_MS } from '../../config/scribe-engine.config';
+import { ScribeApiService } from '../scribe-api/scribe-api.service';
 
 export enum StreamingStatus {
   NotStarted = 'not-started',
@@ -10,7 +11,6 @@ export enum StreamingStatus {
   Error = 'error'
 }
 
-declare const Microsoft: any;
 // This is a wrapper class for the Microsoft Speech SDK for testing purposes
 @Injectable({
   providedIn: 'root'
@@ -34,9 +34,8 @@ export class SpeechToTextService {
   private _streamingStatus$ = new BehaviorSubject<StreamingStatus>(StreamingStatus.NotStarted);
   public streamingStatus$ = this._streamingStatus$.asObservable();
   private speechSDK: MicrosoftSpeechSDK | null = null;
-  private azureSpeechKey: string = inject(AZURE_SPEECH_KEY);
-  private azureSpeechRegion: string = inject(AZURE_SPEECH_REGION);
   private silenceTimeoutMs: number = inject(SPEECH_SILENCE_TIMEOUT_MS);
+  private apiService = inject(ScribeApiService);
 
   public loadSDK() {
     if (!!(window as any).SpeechSDK) {
@@ -49,13 +48,11 @@ export class SpeechToTextService {
 
   public async startSpeechRecognizer() {
     console.log('Starting classification speech recognizer');
+    const tokenResponse = await this.apiService.getSttToken();
     
-    if (this.speechSDK && !this.speechRecognizer) {
+    if (!tokenResponse?.error && this.speechSDK && !this.speechRecognizer) {
       const audioConfig = this.speechSDK.AudioConfig.fromDefaultMicrophoneInput();
-      const speechConfig = this.speechSDK.SpeechConfig.fromSubscription(
-        this.azureSpeechKey,
-        this.azureSpeechRegion,
-      );
+      const speechConfig = this.speechSDK.SpeechConfig.fromAuthorizationToken(tokenResponse.token, tokenResponse.region);
       speechConfig.setProperty(this.speechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, this.silenceTimeoutMs.toString());
       this.speechRecognizer = new this.speechSDK.SpeechRecognizer(speechConfig, audioConfig);
     }
