@@ -1,355 +1,232 @@
-export const reasonForVisitSchema = {
-    "reasonForVisit": {
-      "type": "object",
-      "description": "Reason For Visit",
-      "properties": {
-        "historyOfPresentIllness": {
-          "type": "object",
-          "description": "History Of Present Illness",
-          "properties": {
-            "chiefComplaint": {
-              "type": "array",
-              "description": "Chief Complaint",
-              "items": {
-                "type": "object",
-                "description": "Chief Complaint",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "Name"
+import { SchemaNodeType, ParsedSchema } from "../../models/schema-definition";
+
+// Mock parsed schema structure used by SchemaParserService
+export const getMockedParsedSchemas = (): { [key: string]: ParsedSchema } => {
+  const schemas: { [key: string]: ParsedSchema } = {};
+
+  // ReasonForVisit parsed schema
+  schemas['reasonForVisit'] = {
+    rootType: 'reasonForVisit',
+    structure: {
+      type: SchemaNodeType.Object,
+      properties: {
+        historyOfPresentIllness: {
+          type: SchemaNodeType.Object,
+          properties: {
+            chiefComplaint: {
+              type: SchemaNodeType.Array,
+              itemType: {
+                type: SchemaNodeType.Object,
+                properties: {
+                  name: {
+                    type: SchemaNodeType.KbEntity,
+                    kbTableId: 210
                   },
-                  "severity": {
-                    "type": "string",
-                    "description": "Severity"
+                  severity: {
+                    type: SchemaNodeType.KbEntity,
+                    kbTableId: 220
                   },
-                  "quality": {
-                    "type": "string",
-                    "description": "Quality"
+                  quality: {
+                    type: SchemaNodeType.KbEntity,
+                    kbTableId: 230
                   },
-                  "duration": {
-                    "type": "string",
-                    "description": "Duration"
+                  duration: {
+                    type: SchemaNodeType.KbEntity,
+                    kbTableId: 220
                   },
-                  "course": {
-                    "type": "string",
-                    "description": "Course"
+                  course: {
+                    type: SchemaNodeType.Array,
+                    itemType: {
+                      type: SchemaNodeType.String
+                    }
                   }
                 }
+              }
+            },
+            diabetes: {
+              type: SchemaNodeType.Object,
+              properties: {
+                date: {
+                  type: SchemaNodeType.String
+                },
+                hba1c: {
+                  type: SchemaNodeType.Number
+                }
+              }
+            },
+            source: {
+              type: SchemaNodeType.String
+            },
+            mentalStatus: {
+              type: SchemaNodeType.Boolean
+            },
+            freeText: {
+              type: SchemaNodeType.String
+            }
+          }
+        },
+        condition: {
+          type: SchemaNodeType.Array,
+          itemType: {
+            type: SchemaNodeType.Object
+          }
+        }
+      }
+    }
+  };
+
+  // Plan parsed schema
+  schemas['plan'] = {
+    rootType: 'plan',
+    structure: {
+      type: SchemaNodeType.Object,
+      properties: {
+        physicianImpressions: {
+          type: SchemaNodeType.Array,
+          itemType: {
+            type: SchemaNodeType.Object,
+            properties: {
+              impression: {
+                type: SchemaNodeType.String
+              },
+              treatments: {
+                type: SchemaNodeType.Array,
+                itemType: {
+                  type: SchemaNodeType.String
+                }
+              },
+              prescriptions: {
+                type: SchemaNodeType.Array,
+                itemType: {
+                  type: SchemaNodeType.String
+                }
+              },
+              laterality: {
+                type: SchemaNodeType.String
+              },
+              advice: {
+                type: SchemaNodeType.Array,
+                itemType: {
+                  type: SchemaNodeType.String
+                }
+              }
+            }
+          }
+        },
+        other_discussions: {
+          type: SchemaNodeType.Array,
+          itemType: {
+            type: SchemaNodeType.Object,
+            properties: {
+              discussions: {
+                type: SchemaNodeType.String
+              }
+            }
+          }
+        },
+        followup: {
+          type: SchemaNodeType.Array,
+          itemType: {
+            type: SchemaNodeType.Object,
+            properties: {
+              provider: {
+                type: SchemaNodeType.String
+              },
+              whento: {
+                type: SchemaNodeType.String
+              },
+              type: {
+                type: SchemaNodeType.String
+              },
+              laterality: {
+                type: SchemaNodeType.String
+              }
+            }
+          }
+        },
+        specialty_meds: {
+          type: SchemaNodeType.Array,
+          itemType: {
+            type: SchemaNodeType.Object
+          }
+        },
+        management: {
+          type: SchemaNodeType.String
+        }
+      }
+    }
+  };
+
+  // Exam parsed schema
+  schemas['exam'] = {
+    rootType: 'exam',
+    structure: {
+      type: SchemaNodeType.Object,
+      properties: {
+        anterior: {
+          type: SchemaNodeType.Object,
+          properties: {
+            general: {
+              type: SchemaNodeType.Array,
+              itemType: {
+                type: SchemaNodeType.Object,
+                properties: {
+                  laterality: {
+                    type: SchemaNodeType.String
+                  },
+                  location: {
+                    type: SchemaNodeType.String
+                  },
+                  finding: {
+                    type: SchemaNodeType.String
+                  },
+                  severity: {
+                    type: SchemaNodeType.String
+                  },
+                  status: {
+                    type: SchemaNodeType.String
+                  },
+                  category: {
+                    type: SchemaNodeType.String
+                  }
+                }
+              }
+            },
+            lcs: {
+              type: SchemaNodeType.Array,
+              itemType: {
+                type: SchemaNodeType.Object
+              }
+            },
+            cornea: {
+              type: SchemaNodeType.Array,
+              itemType: {
+                type: SchemaNodeType.Object
+              }
+            },
+            anterior_chamber: {
+              type: SchemaNodeType.Array,
+              itemType: {
+                type: SchemaNodeType.Object
+              }
+            },
+            iris: {
+              type: SchemaNodeType.Array,
+              itemType: {
+                type: SchemaNodeType.Object
+              }
+            },
+            lens: {
+              type: SchemaNodeType.Array,
+              itemType: {
+                type: SchemaNodeType.Object
               }
             }
           }
         }
       }
     }
-  }
+  };
 
-  export const planSchema = {
-    "plan": {
-      "type": "object",
-      "description": "Plan",
-      "properties": {
-        "physicianImpressions": {
-          "type": "array",
-          "description": "Physician Impressions",
-          "items": {
-            "type": "object",
-            "description": "Physician Impression",
-            "properties": {
-              "impression": {
-                "type": "string",
-                "description": "Impression"
-              },
-              "treatments": {
-                "type": "array",
-                "description": "Treatments",
-                "items": {
-                  "type": "string",
-                  "description": "Treatments"
-                }
-              },
-              "prescriptions": {
-                "type": "array",
-                "description": "Prescriptions",
-                "items": {
-                  "type": "string",
-                  "description": "Prescriptions"
-                }
-              },
-              "laterality": {
-                "type": "string",
-                "description": "Laterality",
-                "enum": [
-                  "OU",
-                  "OD",
-                  "OS"
-                ]
-              },
-              "advice": {
-                "type": "array",
-                "description": "Advice",
-                "items": {
-                  "type": "string",
-                  "description": "Advice"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  export const examSchema = {
-    "exam": {
-      "type": "object",
-      "description": "Exam",
-      "properties": {
-        "anterior": {
-          "type": "object",
-          "description": "Anterior Section List",
-          "properties": {
-            "general": {
-              "type": "array",
-              "description": "General",
-              "items": {
-                "type": "object",
-                "description": "Anterior Section",
-                "properties": {
-                  "laterality": {
-                    "type": "string",
-                    "description": "Laterality",
-                    "enum": [
-                      "OU",
-                      "OD",
-                      "OS"
-                    ]
-                  },
-                  "location": {
-                    "type": "string",
-                    "description": "Location"
-                  },
-                  "finding": {
-                    "type": "string",
-                    "description": "Finding"
-                  },
-                  "severity": {
-                    "type": "string",
-                    "description": "Severity"
-                  },
-                  "status": {
-                    "type": "string",
-                    "description": "Status"
-                  },
-                  "category": {
-                    "type": "string",
-                    "description": "Category"
-                  }
-                }
-              }
-            },
-            "lcs": {
-              "type": "array",
-              "description": "Lcs",
-              "items": {
-                "type": "object",
-                "description": "Anterior Section",
-                "properties": {
-                  "laterality": {
-                    "type": "string",
-                    "description": "Laterality",
-                    "enum": [
-                      "OU",
-                      "OD",
-                      "OS"
-                    ]
-                  },
-                  "location": {
-                    "type": "string",
-                    "description": "Location"
-                  },
-                  "finding": {
-                    "type": "string",
-                    "description": "Finding"
-                  },
-                  "severity": {
-                    "type": "string",
-                    "description": "Severity"
-                  },
-                  "status": {
-                    "type": "string",
-                    "description": "Status"
-                  },
-                  "category": {
-                    "type": "string",
-                    "description": "Category"
-                  }
-                }
-              }
-            },
-            "cornea": {
-              "type": "array",
-              "description": "Cornea",
-              "items": {
-                "type": "object",
-                "description": "Anterior Section",
-                "properties": {
-                  "laterality": {
-                    "type": "string",
-                    "description": "Laterality",
-                    "enum": [
-                      "OU",
-                      "OD",
-                      "OS"
-                    ]
-                  },
-                  "location": {
-                    "type": "string",
-                    "description": "Location"
-                  },
-                  "finding": {
-                    "type": "string",
-                    "description": "Finding"
-                  },
-                  "severity": {
-                    "type": "string",
-                    "description": "Severity"
-                  },
-                  "status": {
-                    "type": "string",
-                    "description": "Status"
-                  },
-                  "category": {
-                    "type": "string",
-                    "description": "Category"
-                  }
-                }
-              }
-            },
-            "anterior_chamber": {
-              "type": "array",
-              "description": "Anterior_chamber",
-              "items": {
-                "type": "object",
-                "description": "Anterior Section",
-                "properties": {
-                  "laterality": {
-                    "type": "string",
-                    "description": "Laterality",
-                    "enum": [
-                      "OU",
-                      "OD",
-                      "OS"
-                    ]
-                  },
-                  "location": {
-                    "type": "string",
-                    "description": "Location"
-                  },
-                  "finding": {
-                    "type": "string",
-                    "description": "Finding"
-                  },
-                  "severity": {
-                    "type": "string",
-                    "description": "Severity"
-                  },
-                  "status": {
-                    "type": "string",
-                    "description": "Status"
-                  },
-                  "category": {
-                    "type": "string",
-                    "description": "Category"
-                  }
-                }
-              }
-            },
-            "iris": {
-              "type": "array",
-              "description": "Iris",
-              "items": {
-                "type": "object",
-                "description": "Anterior Section",
-                "properties": {
-                  "laterality": {
-                    "type": "string",
-                    "description": "Laterality",
-                    "enum": [
-                      "OU",
-                      "OD",
-                      "OS"
-                    ]
-                  },
-                  "location": {
-                    "type": "string",
-                    "description": "Location"
-                  },
-                  "finding": {
-                    "type": "string",
-                    "description": "Finding"
-                  },
-                  "severity": {
-                    "type": "string",
-                    "description": "Severity"
-                  },
-                  "status": {
-                    "type": "string",
-                    "description": "Status"
-                  },
-                  "category": {
-                    "type": "string",
-                    "description": "Category"
-                  }
-                }
-              }
-            },
-            "lens": {
-              "type": "array",
-              "description": "Lens",
-              "items": {
-                "type": "object",
-                "description": "Anterior Section",
-                "properties": {
-                  "laterality": {
-                    "type": "string",
-                    "description": "Laterality",
-                    "enum": [
-                      "OU",
-                      "OD",
-                      "OS"
-                    ]
-                  },
-                  "location": {
-                    "type": "string",
-                    "description": "Location"
-                  },
-                  "finding": {
-                    "type": "string",
-                    "description": "Finding"
-                  },
-                  "severity": {
-                    "type": "string",
-                    "description": "Severity"
-                  },
-                  "status": {
-                    "type": "string",
-                    "description": "Status"
-                  },
-                  "category": {
-                    "type": "string",
-                    "description": "Category"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  export const testSchemaDefinition = [
-    reasonForVisitSchema,
-    planSchema,
-    examSchema
-  ]
+  return schemas;
+};

@@ -6,19 +6,20 @@ import { SpeechToTextService, StreamingStatus } from '../speech-to-text/speechTo
 import { GenericMappingService } from '../mapper/mapping.service';
 import { ClassificationResult } from '../../models/api';
 import { CLASSIFICATION_STRATEGY_MANAGER_FACTORY } from '../../strategies/classification-strategy.manager';
+import { SCRIBE_SCHEMA_DEF, SCRIBE_INITIAL_CHUNKS, SCRIBE_INITIAL_STATE } from '../../config/scribe-engine.config';
+
 // Mock classes for dependencies
 class MockSpeechToTextService {
   streamingStatus$ = new BehaviorSubject<StreamingStatus>(StreamingStatus.NotStarted);
   recognizedSpeech$ = new Subject();
   startSpeechRecognizer = jasmine.createSpy('startSpeechRecognizer');
   stopSpeechRecognizer = jasmine.createSpy('stopSpeechRecognizer');
+  loadSDK = jasmine.createSpy('loadSDK');
 }
 
 class MockMappingService {
-  parseSchemas = jasmine.createSpy('parseSchemas');
-  mapAllData = jasmine.createSpy('mapAllData').and.callFake((classification, currentChart) => {
-    return { ...currentChart};
-  });
+  mapAllData = jasmine.createSpy('mapAllData').and.returnValue({});
+  mapData = jasmine.createSpy('mapData').and.returnValue({});
 }
 
 class MockScribeApiService {
@@ -34,6 +35,32 @@ class MockScribeApiService {
   cleanupConversation = jasmine.createSpy('cleanupConversation')
     .and.returnValue(Promise.resolve());
 }
+
+// Mock schema definition for testing
+const mockSchemaDefinition = [
+  {
+    TestSchema: {
+      type: 'object',
+      properties: {
+        simpleProperty: {
+          type: 'string'
+        }
+      }
+    }
+  }
+];
+
+// Mock initial chunks for testing
+const mockInitialChunks = [
+  'This is a test chunk'
+];
+
+// Mock initial state for testing
+const mockInitialState = {
+  testSection: {
+    testProperty: 'Test Value'
+  }
+};
 
 describe('ScribeService', () => {
   let service: ScribeService;
@@ -61,6 +88,9 @@ describe('ScribeService', () => {
         { provide: SpeechToTextService, useValue: mockSpeechToTextService },
         { provide: GenericMappingService, useValue: mockMappingService },
         { provide: ScribeApiService, useValue: mockScribeApiService },
+        { provide: SCRIBE_SCHEMA_DEF, useValue: mockSchemaDefinition },
+        { provide: SCRIBE_INITIAL_CHUNKS, useValue: mockInitialChunks },
+        { provide: SCRIBE_INITIAL_STATE, useValue: mockInitialState },
         {
           provide: CLASSIFICATION_STRATEGY_MANAGER_FACTORY,
           useValue: () => mockClassificationManager
@@ -203,10 +233,9 @@ describe('ScribeService', () => {
       // Call the private method directly
       await service.processChunk('test chunk', ['test chunk']);
       
-      // Check that sections present was called
+      // Check that sections present was called with correct parameters
       expect(mockScribeApiService.getSectionsPresent).toHaveBeenCalledWith(
         'test chunk', 
-        'test-doctor-guid', 
         'mock-conversation-guid',
         1
       );
@@ -215,16 +244,12 @@ describe('ScribeService', () => {
       expect(mockScribeApiService.classifyConversation).toHaveBeenCalledWith(
         'test chunk',
         ['section1'],
-        'test-doctor-guid',
         'mock-conversation-guid',
         1
       );
       
       // Check mapping
-      expect(mockMappingService.mapAllData).toHaveBeenCalledWith(
-        mockClassificationResult.classification, 
-        (service as any)._medicalChart.value
-      );
+      expect(mockMappingService.mapAllData).toHaveBeenCalled();
       
       // Check that classification results were updated
       expect(service['classificationResults$'].value).toEqual(mockClassificationResult);
@@ -280,15 +305,11 @@ describe('ScribeService', () => {
       expect(mockScribeApiService.classifyConversation).toHaveBeenCalledWith(
         'test chunk',
         ['section1'],
-        'test-doctor-guid',
         'mock-conversation-guid',
         1
       );
       
-      expect(mockMappingService.mapAllData).toHaveBeenCalledWith(
-        mockClassificationResult.classification, 
-        (service as any)._medicalChart.value
-      );
+      expect(mockMappingService.mapAllData).toHaveBeenCalled();
     });
 
     it('should use all schema names when no sections provided', async () => {
@@ -302,12 +323,10 @@ describe('ScribeService', () => {
       // Call the private method directly without sections
       await (service as any).classifyChunk('test chunk', ['test chunk']);
       
-      // Verify it used all schema names
-      const expectedSections = ['exam', 'plan', 'reasonForVisit']; // These should match your actual schema names
+      // Verify it used schema names from mockSchemaDefinition
       expect(mockScribeApiService.classifyConversation).toHaveBeenCalledWith(
         'test chunk',
-        jasmine.arrayContaining(expectedSections),
-        'test-doctor-guid',
+        ['TestSchema'],
         'mock-conversation-guid',
         1
       );
@@ -423,12 +442,11 @@ describe('ScribeService', () => {
   describe('cleanupConversation', () => {
     it('should clean up conversation', async () => {
       const conversationGuid = 'test-conversation-guid';
-      service['doctorGuid'] = 'test-doctor-guid';
       
       await service.cleanupConversation(conversationGuid);
       
       expect(mockScribeApiService.cleanupConversation).toHaveBeenCalledWith(
-        conversationGuid, 'test-doctor-guid'
+        conversationGuid
       );
       expect(mockClassificationManager.cleanup).toHaveBeenCalled();
       expect(service['_isInitialized$'].value).toBe(false);

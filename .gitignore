@@ -39,3 +39,4 @@ dist/
 **/*.tgz
 
 .angular/
+coverage/

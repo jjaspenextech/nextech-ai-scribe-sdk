@@ -1,121 +1,53 @@
 import { TestBed } from '@angular/core/testing';
 import { GenericMappingService } from './mapping.service';
 import { SchemaParserService } from './schema-parser.service';
-import { ParsedSchemaNode, SchemaNodeType } from '../../models/schema-definition';
-import { KbChoice, UIItemWithDataReference } from '../../models/classification';
-import { ReasonForVisit, Plan, Exam, MedicalChart } from './test.data';
 import { SCRIBE_SCHEMA_DEF } from '../../config/scribe-engine.config';
-import { testSchemaDefinition } from './test.schema';
+import { ClassificationData, KbChoice, UIItemWithDataReference } from '../../models/classification';
+import { SchemaNodeType, ParsedSchemaNode } from '../../models/schema-definition';
+import { 
+  Plan, ReasonForVisit, Exam, 
+  getMockData, getEmptyMedicalChart, getMockClassificationResults, 
+  getKbEntityMockData
+} from './test.data';
+import { getMockedParsedSchemas } from './test.schema';
 
-fdescribe('GenericMappingService', () => {
+describe('GenericMappingService', () => {
   let service: GenericMappingService;
-  let mockData: Record<string, any>;
-  let emptyMedicalChart: MedicalChart;
-  let mappingContext: {
-    dataReferenceItems: Record<string, UIItemWithDataReference>;
-    nextKbId: number;
-  };
-
+  let mappingContext: any;
+  let mockData: any;
+  let emptyMedicalChart: ClassificationData;
+  let schemaParserServiceSpy: jasmine.SpyObj<SchemaParserService>;
+  let kbEntityMockData: any;
+  
   beforeEach(() => {
+    // Create spy for SchemaParserService
+    const spy = jasmine.createSpyObj('SchemaParserService', ['getParsedSchema']);
+    
+    // Use the mocked parsed schemas
+    const mockedSchemas = getMockedParsedSchemas();
+    spy.getParsedSchema.and.callFake((schemaName: string) => mockedSchemas[schemaName]);
+
     TestBed.configureTestingModule({
       providers: [
         GenericMappingService,
-        SchemaParserService,
-        { provide: SCRIBE_SCHEMA_DEF, useValue: testSchemaDefinition }
+        { provide: SchemaParserService, useValue: spy },
+        { provide: SCRIBE_SCHEMA_DEF, useValue: [] } // Provide empty array for SCRIBE_SCHEMA_DEF token
       ]
     });
 
-    service = TestBed.inject(GenericMappingService);    
+    service = TestBed.inject(GenericMappingService);
+    schemaParserServiceSpy = TestBed.inject(SchemaParserService) as jasmine.SpyObj<SchemaParserService>;
 
-    // Setup mock data
-    mockData = {
-      "reasonForVisit": {
-        "historyOfPresentIllness": {
-          "chiefComplaint": [
-            {
-              "name": {
-                  "label": "some issue",
-                  "Profile_KbEntityId": 123,
-                  "Practice_KbEntityId": 456,
-                  "Profile_DocumentValue": "Dry Eye Syndrome",
-                  "Practice_DocumentValue": "DES",
-                  "Profile_confidence_score": 0.61047447,
-                  "Practice_confidence_score": 0.81510377
-              },
-              "severity": {
-                "label": "moderate",
-                "dataItemId": "1",
-                "referenceTableId": 240
-              },
-              "quality": {
-                "label": "dry and itchy",
-                "dataItemId": "2",
-                "referenceTableId": 230
-              },
-              "duration": {
-                "label": "one week",
-                "dataItemId": "3",
-                "referenceTableId": 220
-              },
-              "course": [
-                "gradually getting worse"
-              ]
-            }
-          ],
-          "diabetes": {
-            "date": "2023-01-01",
-            "hba1c": 6.8
-          },
-          "source": "Patient",
-          "mentalStatus": true,
-          "freeText": "No additional information"
-        },
-        "condition": []
-      },
-      "plan": {
-        "physicianImpressions": [
-          {
-            "impression": "Dry eye syndrome and blepharitis",
-            "treatments": [ "Warm compress" ],
-            "prescriptions": [
-              "Restasis, one drop per eye twice a day"
-            ],
-            "laterality": "OU",
-            "advice": []
-          }
-        ],
-        "other_discussions": [
-          {
-            "discussions": "Patient has type 2 diabetes with recent HBA1C of 6.8. Patient spends a few hours on the computer for work, which may exacerbate dryness."
-          }
-        ],
-        "followup": [
-          {
-            "provider": "Doctor Smith",
-            "whento": "2023-02-01",
-            "type": "exam",
-            "laterality": "OU"
-          }
-        ],
-        "specialty_meds": []
-      },
-    };
-
+    // Create mapping context for testing
     mappingContext = {
       dataReferenceItems: {},
       nextKbId: 0
     };
 
-    // Setup empty medical chart
-    emptyMedicalChart = {
-      sections: {
-        'reasonForVisit': {} as ReasonForVisit,
-        'plan': {} as Plan,
-        'exam': {} as Exam
-      },
-      dataReferenceItems: {}
-    };
-
+    // Get test data from test.data.ts
+    mockData = getMockData();
+    emptyMedicalChart = getEmptyMedicalChart();
+    kbEntityMockData = getKbEntityMockData();
   });
 
   it('should be created', () => {
@@ -132,7 +64,6 @@ fdescribe('GenericMappingService', () => {
       // Get the mapped KB item from the context
       const mappedKbItem = Object.values(mappingContext.dataReferenceItems)[0]; 
       const chiefComplaint = result.historyOfPresentIllness.chiefComplaint[0];
-
 
       // Check the KB reference
       expect(chiefComplaint.name.dataItemId).toBeTruthy();
@@ -242,16 +173,7 @@ fdescribe('GenericMappingService', () => {
 
   describe('KB Entity Mapping', () => {
     it('should correctly map KB entities', () => {
-      let kbItems: Record<string, UIItemWithDataReference> = {};
-      mockData['reasonForVisit']['historyOfPresentIllness']['chiefComplaint'][0]['name'] = {
-        "label": "Dry Eye",
-        "Profile_KbEntityId": 123,
-        "Profile_DocumentValue": "Dry Eye Syndrome",
-        "Profile_confidence_score": 0.95,
-        "Practice_KbEntityId": 456,
-        "Practice_DocumentValue": "DES",
-        "Practice_confidence_score": 0.85
-      };
+      mockData['reasonForVisit']['historyOfPresentIllness']['chiefComplaint'][0]['name'] = kbEntityMockData.standardKbEntity;
 
       const result = service.mapData<ReasonForVisit>(mockData['reasonForVisit'], 'reasonForVisit', mappingContext);
       
@@ -270,13 +192,8 @@ fdescribe('GenericMappingService', () => {
     });
 
     it('should handle practice-only KB entities', () => {
-      let kbItems: Record<string, UIItemWithDataReference> = {};
-      mockData['reasonForVisit']['historyOfPresentIllness']['chiefComplaint'][0]['name'] = {
-        "label": "Dry Eye",
-        "Practice_KbEntityId": 456,
-        "Practice_DocumentValue": "DES",
-        "Practice_confidence_score": 0.85
-      };
+      mockData['reasonForVisit']['historyOfPresentIllness']['chiefComplaint'][0]['name'] = kbEntityMockData.practiceOnlyKbEntity;
+      
       const result = service.mapData<ReasonForVisit>(mockData['reasonForVisit'], 'reasonForVisit', mappingContext);
       
       const nameRef = result.historyOfPresentIllness.chiefComplaint[0].name;
@@ -288,8 +205,7 @@ fdescribe('GenericMappingService', () => {
     });
 
     it('should handle non-kb-data in kbItems', () => {
-      let kbItems: Record<string, UIItemWithDataReference> = {};
-      mockData['reasonForVisit']['historyOfPresentIllness']['chiefComplaint'][0]['name'] = 'non-kb-data';
+      mockData['reasonForVisit']['historyOfPresentIllness']['chiefComplaint'][0]['name'] = kbEntityMockData.nonKbData;
 
       const result = service.mapData<ReasonForVisit>(mockData['reasonForVisit'], 'reasonForVisit', mappingContext);
       
@@ -305,13 +221,7 @@ fdescribe('GenericMappingService', () => {
 
   describe('Array Handling', () => {
     it('should handle non-array data for array schema nodes', () => {
-      const mockClassificationResults = {
-        "reasonForVisit": {
-          "historyOfPresentIllness": {
-            "chiefComplaint": "not an array" // This should be converted to an empty array
-          }
-        }
-      };
+      const mockClassificationResults = getMockClassificationResults();
 
       const result = service.mapData<ReasonForVisit>(mockClassificationResults['reasonForVisit'], 'reasonForVisit', mappingContext);
       expect(Array.isArray(result.historyOfPresentIllness.chiefComplaint)).toBe(true);
