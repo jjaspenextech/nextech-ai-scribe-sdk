@@ -1,0 +1,42 @@
+trigger: none
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - main
+      - dev
+
+stages:
+- stage: BuildAndTest
+  jobs:
+  - job: BuildPackage
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
+        
+    - script: |
+        npm ci
+      displayName: 'Install dependencies'
+    
+    - script: |
+        npm test
+      displayName: 'Run tests'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFiles: '**/test-results.xml'
+        testRunTitle: 'Publish Test Results'
+      condition: succeededOrFailed()
+
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
+        reportDirectory: '$(System.DefaultWorkingDirectory)/coverage'
+        failIfCoverageEmpty: true
+      condition: succeededOrFailed() 

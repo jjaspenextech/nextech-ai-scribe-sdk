@@ -45,26 +45,31 @@ export class ApiService implements ScribeAPIClient {
   constructor(private http: HttpClient) {}
 
   get(url: string, options?: any): Observable<any> {
-    url = environment.apiUrl + url;
-    options.headers = new HttpHeaders({
-      ...options.headers,
-      'api-key': environment.apiKey
-    });
+    url = environment.apiUrl + url;    
+    options.headers = options.headers
+      .set('api-key', environment.apiKey);
     return this.http.get(url, options);
   }
 
   post(url: string, body: any, options?: any): Observable<any> {
     url = environment.apiUrl + url;
-    options.headers = new HttpHeaders({
-      ...options.headers,
-      'api-key': environment.apiKey
-    });
+    options.headers = options.headers
+      .set('api-key', environment.apiKey);
     return this.http.post(url, body, options);
   }
 }
 ```
 
-2. **Provide configuration tokens** in your app module:
+2. **Create schema definition based on your UI models**:
+
+```typescript
+export interface yourSchemaDefinition {
+  // Define your medical chart properties here
+}
+```
+Note: You can use the schema definition package passing in the file with your UI models to generate the schema definition.
+
+3. **Provide configuration tokens** in your app module:
 
 ```typescript
 import { SCRIBE_SCHEMA_DEF, SCRIBE_API_CLIENT } from 'nextech-ai-scribe-sdk';
@@ -78,8 +83,13 @@ import { SCRIBE_SCHEMA_DEF, SCRIBE_API_CLIENT } from 'nextech-ai-scribe-sdk';
 export class AppModule {}
 ```
 
-3. **Use the scribe service** in your components:
+4. **Include Microsoft Azure Cognitive Services Speech SDK scripts** in your project:
+```html
+  <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+```
 
+5. **Use the scribe service** in your components:
+Example:
 ```typescript
 import { ScribeService } from 'nextech-ai-scribe-sdk';
 
