@@ -22,7 +22,7 @@ The Scribe Engine library is designed with the following architecture:
 ## Installation
 
 ```bash
-npm install scribe-engine-lib
+npm install nextech-ai-scribe-sdk
 ```
 
 ## Usage

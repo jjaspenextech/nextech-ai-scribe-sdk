@@ -194,9 +194,9 @@ export class ScribeService {
     if (!result || !result['classification']) return;
     const classification = result['classification'];
     
-    const updatedMedicalChart = this.mappingService.mapAllData(classification, this._classificationData.value);
-    console.log('updatedMedicalChart', updatedMedicalChart);
-    this._classificationData.next(updatedMedicalChart);
+    const classificationData = this.mappingService.mapAllData(classification, this._classificationData.value);
+    
+    this._classificationData.next(classificationData);
     this.updateClassifiedSections(classification);
   }
 
