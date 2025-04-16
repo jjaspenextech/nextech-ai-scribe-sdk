@@ -94,7 +94,6 @@ export class ScribeService {
       this.handleClassificationResults(result);
     });
 
-    // this.mappingService.parseSchemas(this.schemaDefinition);
     this._classificationData.next(this.initialState);
   }
 
@@ -103,7 +102,6 @@ export class ScribeService {
       this.speechToTextService.loadSDK();
       this.conversationGuid = await this.scribeApiService.initializeConversation();
       this._isInitialized$.next(true);
-      // for quick testing, do not commit this uncommented
       for (const chunk of this.initialChunks) {
         this.strategyManager.handleChunk(chunk);
       }

@@ -255,20 +255,20 @@ describe('ScribeService', () => {
       expect(service['classificationResults$'].value).toEqual(mockClassificationResult);
     });
 
-    it('should handle errors during sections present check and not call classify conversation', async () => {
+    it('should throw error during sections present check and not call classify conversation', async () => {
       const error = new Error('Test error');
       mockScribeApiService.getSectionsPresent.and.returnValue(Promise.reject(error));
       
       spyOn(console, 'error');
       
-      // Call the private method directly
-      await service.processChunk('test chunk', ['test chunk']);
+      // Call the method directly and expect it to throw
+      await expectAsync(service.processChunk('test chunk', ['test chunk'])).toBeRejectedWith(error);
       
       expect(console.error).toHaveBeenCalled();
       expect(mockScribeApiService.classifyConversation).not.toHaveBeenCalled();
     });
 
-    it('should handle errors during classification', async () => {
+    it('should throw error during classification', async () => {
       const mockSectionsPresent = {
         updatedFlags: { section1: true }
       };
@@ -279,8 +279,8 @@ describe('ScribeService', () => {
       
       spyOn(console, 'error');
       
-      // Call the private method directly
-      await service.processChunk('test chunk', ['test chunk']);
+      // Call the method directly and expect it to throw
+      await expectAsync(service.processChunk('test chunk', ['test chunk'])).toBeRejectedWith(error);
       
       expect(console.error).toHaveBeenCalled();
     });
@@ -471,6 +471,41 @@ describe('ScribeService', () => {
       service.ngOnDestroy();
       
       expect(mockClassificationManager.cleanup).toHaveBeenCalled();
+    });
+  });
+
+  describe('sectionPresentsChunk', () => {
+    beforeEach(async () => {
+      await service.initializeConversation();
+    });
+
+    it('should call getSectionsPresent and return result', async () => {
+      const mockSectionsPresent = {
+        updatedFlags: { section1: true, section2: false }
+      };
+      
+      mockScribeApiService.getSectionsPresent.and.returnValue(Promise.resolve(mockSectionsPresent));
+      
+      const result = await (service as any).sectionPresentsChunk('test chunk', 1);
+      
+      expect(mockScribeApiService.getSectionsPresent).toHaveBeenCalledWith(
+        'test chunk',
+        'mock-conversation-guid',
+        1
+      );
+      
+      expect(result).toEqual(mockSectionsPresent.updatedFlags);
+    });
+
+    it('should throw error when getSectionsPresent fails', async () => {
+      const error = new Error('Test error');
+      mockScribeApiService.getSectionsPresent.and.returnValue(Promise.reject(error));
+      
+      spyOn(console, 'error');
+      
+      await expectAsync((service as any).sectionPresentsChunk('test chunk', 1)).toBeRejectedWith(error);
+      
+      expect(console.error).toHaveBeenCalled();
     });
   });
 }); 
