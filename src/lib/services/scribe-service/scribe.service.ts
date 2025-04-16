@@ -153,6 +153,7 @@ export class ScribeService {
       }
     } catch (error) {
       console.error('Error processing chunk:', error);
+      throw error;
     }
   }
 
@@ -167,15 +168,20 @@ export class ScribeService {
       return sections?.updatedFlags || {};
     } catch (error) {
       console.error('Error checking sections present:', error);
-      return {};
+      throw error;
     }
   }
 
   public async processChunk(chunk: string, chunks: string[]): Promise<void> {
-    const sectionsPresent = await this.sectionPresentsChunk(chunk, chunks.length);
-    const sectionsToClassify = await this.getSectionsToClassify(sectionsPresent);
-    if (sectionsToClassify.length > 0) {
-      await this.classifyChunk(chunk, chunks, sectionsToClassify);
+    try {
+      const sectionsPresent = await this.sectionPresentsChunk(chunk, chunks.length);
+      const sectionsToClassify = await this.getSectionsToClassify(sectionsPresent);
+      if (sectionsToClassify.length > 0) {
+        await this.classifyChunk(chunk, chunks, sectionsToClassify);
+      }
+    } catch (error) {
+      console.error('Error in processChunk:', error);
+      throw error;
     }
   }
 

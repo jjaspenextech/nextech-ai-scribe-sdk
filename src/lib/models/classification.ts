@@ -36,3 +36,9 @@ export interface ClassificationData {
   };
   dataReferenceItems: Record<string, UIItemWithDataReference>;
 }
+
+export interface FacetEntry {
+  label: string;
+  confidenceScore: number;
+  [key: string]: number | string;
+}
