@@ -36,7 +36,8 @@
     "pack": "npm run prepare-pack && cd dist/nextech-ai-scribe-sdk && npm pack",
     "test": "ng test",
     "test:watch": "ng test --watch",
-    "test:ci": "ng test --no-watch --no-progress --browsers=ChromeHeadless"
+    "test:ci": "ng test --no-watch --no-progress --browsers=ChromeHeadless",
+    "test:coverage": "ng test --no-watch --code-coverage"
   },
   "files": [
     "dist/nextech-ai-scribe-sdk/**/*"
