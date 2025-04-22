@@ -47,6 +47,14 @@ stages:
         testRunTitle: 'Publish Test Results'
       condition: succeededOrFailed()
 
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
+        reportDirectory: '$(System.DefaultWorkingDirectory)/coverage'
+      displayName: 'Publish Code Coverage'
+      condition: succeededOrFailed()
+
     - script: |
         npm run build
       displayName: 'npm build'
@@ -75,6 +83,6 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: 'Publish build artifacts'
       inputs:
-        targetPath: '$(Pipeline.Workspace)/dist/'
+        targetPath: '$(Pipeline.Workspace)/s/dist/nextech-ai-scribe-sdk'
         artifact: 'nextech-ai-scribe-sdk'
         publishLocation: 'pipeline'
