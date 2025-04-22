@@ -84,5 +84,5 @@ stages:
       displayName: 'Publish build artifacts'
       inputs:
         targetPath: '$(Pipeline.Workspace)/s/dist/nextech-ai-scribe-sdk'
-        artifact: 'nextech-ai-scribe-sdk-ci'
+        artifact: 'nextech-ai-scribe-sdk'
         publishLocation: 'pipeline'
