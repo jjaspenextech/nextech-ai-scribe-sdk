@@ -18,14 +18,14 @@ pr:
       - '*'  # Run on PRs to any branch
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: ubuntu-22.04
 
 stages:
 - stage: BuildAndTest
   jobs:
   - job: Test
     pool:
-      vmImage: ubuntu-latest
+      vmImage: ubuntu-22.04
     steps:
     - task: NodeTool@0
       inputs:
@@ -47,11 +47,10 @@ stages:
         testRunTitle: 'Publish Test Results'
       condition: succeededOrFailed()
 
-    - task: PublishCodeCoverageResults@1
+    - task: PublishCodeCoverageResults@2
       inputs:
-        codeCoverageTool: 'Cobertura'
-        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
-        reportDirectory: '$(System.DefaultWorkingDirectory)/coverage'
+        pathToSources: '$(System.DefaultWorkingDirectory)/src'
+        failIfCoverageEmpty: false
       displayName: 'Publish Code Coverage'
       condition: succeededOrFailed()
 
@@ -65,7 +64,7 @@ stages:
   jobs:
   - job: PublishPackage
     pool:
-      vmImage: ubuntu-latest
+      vmImage: ubuntu-22.04
     steps:
     - task: NodeTool@0
       inputs:
