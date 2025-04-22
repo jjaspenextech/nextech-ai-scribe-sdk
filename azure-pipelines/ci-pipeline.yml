@@ -18,14 +18,14 @@ pr:
       - '*'  # Run on PRs to any branch
 
 pool:
-  vmImage: ubuntu-22.04
+  vmImage: ubuntu-latest
 
 stages:
 - stage: BuildAndTest
   jobs:
   - job: Test
     pool:
-      vmImage: ubuntu-22.04
+      vmImage: ubuntu-latest
     steps:
     - task: NodeTool@0
       inputs:
@@ -37,27 +37,21 @@ stages:
       displayName: 'npm install'
 
     - script: |
-        mkdir -p junit
-        mkdir -p coverage
-      displayName: 'Create test directories'
-
-    - script: |
         npm run test:coverage
       displayName: 'npm test'
       continueOnError: true
 
     - task: PublishTestResults@2
       inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: '**/TESTS-*.xml'
+        testResultsFiles: '**/test-results.xml'
         testRunTitle: 'Publish Test Results'
       condition: succeededOrFailed()
 
-    - task: PublishCodeCoverageResults@2
+    - task: PublishCodeCoverageResults@1
       inputs:
+        codeCoverageTool: 'Cobertura'
         summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
-        pathToSources: '$(System.DefaultWorkingDirectory)/src'
-        failIfCoverageEmpty: false
+        reportDirectory: '$(System.DefaultWorkingDirectory)/coverage'
       displayName: 'Publish Code Coverage'
       condition: succeededOrFailed()
 
@@ -71,7 +65,7 @@ stages:
   jobs:
   - job: PublishPackage
     pool:
-      vmImage: ubuntu-22.04
+      vmImage: ubuntu-latest
     steps:
     - task: NodeTool@0
       inputs:
