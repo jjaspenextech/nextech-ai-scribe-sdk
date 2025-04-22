@@ -37,8 +37,7 @@ stages:
       displayName: 'npm install'
 
     - script: |
-        export CHROME_BIN=/usr/bin/chromium-browser
-        npm run test:coverage -- --browsers=ChromeHeadless
+        npm run test:coverage
       displayName: 'npm test'
       continueOnError: true
 
