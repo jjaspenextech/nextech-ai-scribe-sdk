@@ -41,12 +41,6 @@ stages:
       displayName: 'npm test'
       continueOnError: true
 
-    - task: PublishTestResults@2
-      inputs:
-        testResultsFiles: '**/test-results.xml'
-        testRunTitle: 'Publish Test Results'
-      condition: succeededOrFailed()
-
     - task: PublishCodeCoverageResults@2
       inputs:
         pathToSources: '$(System.DefaultWorkingDirectory)/src'
