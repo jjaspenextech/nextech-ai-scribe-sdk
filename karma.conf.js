@@ -8,6 +8,8 @@ module.exports = function (config) {
       require('karma-chrome-launcher'),
       require('karma-jasmine-html-reporter'),
       require('karma-coverage'),
+      require('karma-junit-reporter'),
+      require('karma-coverage-istanbul-reporter'),
       require('@angular-devkit/build-angular/plugins/karma')
     ],
     client: {
@@ -22,7 +24,17 @@ module.exports = function (config) {
         { type: 'cobertura' }
       ]
     },
-    reporters: ['progress', 'kjhtml'],
+    coverageIstanbulReporter: {
+      dir: require('path').join(__dirname, './coverage'),
+      reports: ['html', 'lcovonly', 'text-summary', 'cobertura'],
+      fixWebpackSourcePaths: true
+    },
+    junitReporter: {
+      outputDir: './junit/',
+      outputFile: 'TESTS-results.xml',
+      useBrowserName: false
+    },
+    reporters: ['progress', 'kjhtml', 'junit', 'coverage-istanbul'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
