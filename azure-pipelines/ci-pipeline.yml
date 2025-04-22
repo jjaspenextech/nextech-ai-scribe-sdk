@@ -50,6 +50,7 @@ stages:
     - task: PublishCodeCoverageResults@2
       inputs:
         pathToSources: '$(System.DefaultWorkingDirectory)/src'
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
         failIfCoverageEmpty: false
       displayName: 'Publish Code Coverage'
       condition: succeededOrFailed()
