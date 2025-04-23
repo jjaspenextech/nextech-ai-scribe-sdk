@@ -85,7 +85,7 @@ stages:
       displayName: 'Publish to Nextech feed'
       inputs:
         command: 'publish'
-        workingDir: '$(System.ArtifactsDirectory)/package'
+        workingDir: '$(Pipeline.Workspace)/s/dist/nextech-ai-scribe-sdk'
         publishRegistry: 'useFeed'
         publishFeed: '$(feedId)'
         publishPackageMetadata: true
