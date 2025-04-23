@@ -80,3 +80,13 @@ stages:
         targetPath: '$(Pipeline.Workspace)/s/dist/nextech-ai-scribe-sdk'
         artifact: 'nextech-ai-scribe-sdk'
         publishLocation: 'pipeline'
+
+    - task: Npm@1
+      displayName: 'Publish to Nextech feed'
+      inputs:
+        command: 'publish'
+        workingDir: '$(System.ArtifactsDirectory)/package'
+        publishRegistry: 'useFeed'
+        publishFeed: '$(feedId)'
+        publishPackageMetadata: true
+        verbose: false
